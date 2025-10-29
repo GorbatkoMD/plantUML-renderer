@@ -1,16 +1,18 @@
-# Используем официальный образ с OpenJDK
+# Используем официальный образ OpenJDK
 FROM openjdk:11-jre-slim
 
-# Определяем рабочую директорию
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Загружаем последнюю версию plantuml.jar
-ENV PLANTUML_VERSION=1.2023.13
-
+# Устанавливаем зависимости и загружаем PlantUML
 RUN apt-get update && \
-    apt-get install -y wget ttf-dejavu-core --no-install-recommends && \
+    apt-get install -y wget graphviz --no-install-recommends && \
     rm -rf /var/lib/apt/lists/* && \
-    wget -O /app/plantuml.jar https://downloads.sourceforge.net/project/plantuml/plantuml.$PLANTUML_VERSION/plantuml.$PLANTUML_VERSION.jar
+    wget -O /app/plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2023.13/plantuml-1.2023.13.jar
 
-# Команда по умолчанию для запуска рендеринга
-ENTRYPOINT ["java", "-jar", "/app/plantuml.jar"]
+# Создаём обёртку для удобного запуска
+RUN echo '#!/bin/sh\njava -jar /app/plantuml.jar "$@"' > /usr/local/bin/plantuml && \
+    chmod +x /usr/local/bin/plantuml
+
+# Устанавливаем команду по умолчанию
+ENTRYPOINT ["plantuml"]
